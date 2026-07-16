@@ -12,8 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import java.util.List;
-
-import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.security.config.Customizer;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.interviewhub.security.JwtAuthenticationFilter;
@@ -46,7 +45,7 @@ public class SecurityConfig {
 
                 http
 
-                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                .cors(Customizer.withDefaults())
                                 .csrf(csrf -> csrf.disable())
 
                                 .sessionManagement(session -> session
@@ -87,33 +86,6 @@ public class SecurityConfig {
                                                 UsernamePasswordAuthenticationFilter.class);
 
                 return http.build();
-        }
-
-        @Bean
-        CorsConfigurationSource corsConfigurationSource() {
-
-                CorsConfiguration configuration = new CorsConfiguration();
-
-                configuration.setAllowedOrigins(List.of(
-                                "http://localhost:5173",
-                                "https://interviewhub-ai-two.vercel.app"));
-
-                configuration.setAllowedMethods(List.of(
-                                "GET",
-                                "POST",
-                                "PUT",
-                                "DELETE",
-                                "OPTIONS"));
-
-                configuration.setAllowedHeaders(List.of("*"));
-
-                configuration.setAllowCredentials(true);
-
-                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-
-                source.registerCorsConfiguration("/**", configuration);
-
-                return source;
         }
 
 }
