@@ -10,77 +10,110 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import java.util.List;
 
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.interviewhub.security.JwtAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-    }
+        public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+                this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        }
 
-    @Bean
-    PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-    @Bean
-    AuthenticationManager authenticationManager(
-            AuthenticationConfiguration configuration)
-            throws Exception {
+        @Bean
+        AuthenticationManager authenticationManager(
+                        AuthenticationConfiguration configuration)
+                        throws Exception {
 
-        return configuration.getAuthenticationManager();
-    }
+                return configuration.getAuthenticationManager();
+        }
 
-    @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http)
-            throws Exception {
+        @Bean
+        SecurityFilterChain securityFilterChain(HttpSecurity http)
+                        throws Exception {
 
-        http
+                http
 
-                .csrf(csrf -> csrf.disable())
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                .csrf(csrf -> csrf.disable())
 
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                .authorizeHttpRequests(auth -> auth
+                                .authorizeHttpRequests(auth -> auth
 
-                        // Public APIs
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/api/recruiter/register",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**")
-                        .permitAll()
+                                                // Public APIs
+                                                .requestMatchers(
+                                                                "/api/auth/**",
+                                                                "/api/recruiter/register",
+                                                                "/swagger-ui/**",
+                                                                "/swagger-ui.html",
+                                                                "/v3/api-docs/**")
+                                                .permitAll()
 
-                        // Candidate APIs
-                        .requestMatchers(
-                                "/candidate/**",
-                                "/resume/**",
-                                "/interview/**",
-                                "/ai/resume/**")
-                        .hasAnyRole("CANDIDATE", "ADMIN")
+                                                // Candidate APIs
+                                                .requestMatchers(
+                                                                "/candidate/**",
+                                                                "/resume/**",
+                                                                "/interview/**",
+                                                                "/ai/resume/**")
+                                                .hasAnyRole("CANDIDATE", "ADMIN")
 
-                        // Recruiter APIs
-                        .requestMatchers("/recruiter/**")
-                        .hasAnyRole("RECRUITER", "ADMIN")
+                                                // Recruiter APIs
+                                                .requestMatchers("/recruiter/**")
+                                                .hasAnyRole("RECRUITER", "ADMIN")
 
-                        // Admin APIs
-                        .requestMatchers("/admin/**")
-                        .hasRole("ADMIN")
+                                                // Admin APIs
+                                                .requestMatchers("/admin/**")
+                                                .hasRole("ADMIN")
 
-                        // Any logged-in user
-                        .anyRequest().authenticated())
+                                                // Any logged-in user
+                                                .anyRequest().authenticated())
 
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class);
+                                .addFilterBefore(
+                                                jwtAuthenticationFilter,
+                                                UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+                return http.build();
+        }
+
+        @Bean
+        CorsConfigurationSource corsConfigurationSource() {
+
+                CorsConfiguration configuration = new CorsConfiguration();
+
+                configuration.setAllowedOrigins(List.of(
+                                "http://localhost:5173",
+                                "https://interviewhub-ai-two.vercel.app"));
+
+                configuration.setAllowedMethods(List.of(
+                                "GET",
+                                "POST",
+                                "PUT",
+                                "DELETE",
+                                "OPTIONS"));
+
+                configuration.setAllowedHeaders(List.of("*"));
+
+                configuration.setAllowCredentials(true);
+
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+                source.registerCorsConfiguration("/**", configuration);
+
+                return source;
+        }
 
 }
